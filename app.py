@@ -28,7 +28,6 @@ def get_direct_download_link(video_url):
             else:
                 raise ValueError("Invalid Google Drive link format")
             direct_link = f"https://drive.google.com/uc?id={file_id}&export=download"
-            print(f"Converted Google Drive link to: {direct_link}")  # Debugging
             return direct_link
         except Exception as e:
             raise ValueError(f"Error processing Google Drive link: {e}")
@@ -46,7 +45,6 @@ def download_video(video_url):
     with open(video_path, 'wb') as video_file:
         for chunk in response.iter_content(chunk_size=1024):
             video_file.write(chunk)
-    print(f"Video downloaded to: {video_path}")  # Debugging
     return video_path
 
 def transcribe(source, mimetype=None):
@@ -76,21 +74,20 @@ def transcribe_video():
         if not video_url:
             return jsonify({'error': 'Video URL is required'}), 400
 
-        # converts given link into downloadable link
+        # Convert Google Drive link to direct download link if applicable
         video_url = get_direct_download_link(video_url)
 
-        # Option 1: This option handles direct transcription, use "direct_transcription": true in body json if you wish to have live transcription
+        # Option 1: Direct transcription without downloading
         if direct_transcription:
-            print(f"Performing direct transcription for: {video_url}")  # Debugging
             transcription = transcribe({'url': video_url})
             return jsonify(transcription), 200
 
-        # Option 2: This option handles direct transcription, use "direct_transcription": false in body json if you wish to have the video locally
+        # Option 2: Download video and transcribe locally
         video_path = download_video(video_url)
         with open(video_path, 'rb') as video_file:
             transcription = transcribe({'buffer': video_file, 'mimetype': 'video/mp4'})
         
-        #This lime of code below deletes the video file after transcript, please keep it as a comment/delete it if you wish to keep the transcribed video.
+        # Uncomment the following line if you want to delete the video after transcription
         # os.remove(video_path)
 
         return jsonify(transcription), 200
@@ -98,6 +95,12 @@ def transcribe_video():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """
+    Health check endpoint for monitoring.
+    """
+    return jsonify({"status": "healthy"}), 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
