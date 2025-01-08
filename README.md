@@ -1,116 +1,179 @@
-Video Transcription API
+# Video Transcription API
 
-A Python-based Flask API for video transcription using the Deepgram API. This API supports transcribing video files from URLs, including Google Drive links, and provides transcription results in JSON format with word-level timestamps.
+This project provides a Python-based Flask API for transcribing video files using the Deepgram API. The API can transcribe audio directly from URLs or from videos downloaded locally. It supports Google Drive links and provides transcription results in JSON format with word-level timestamps.
 
-Features:
+---
 
-Transcription Options:
-Direct Transcription: Transcribe audio directly from a URL.
-Local Transcription: Download the video to the server before transcription.
-Supports Google Drive Links: Converts Google Drive sharing links into direct download links automatically.
-Word-Level Timestamps: Provides detailed transcription results with timestamps for each word.
-Health Check Endpoint: A simple /health endpoint for monitoring the app's availability.
-Error Handling: Handles invalid URLs, unsupported formats, and other issues gracefully.
-Getting Started
+## Features
+- **Transcription Options:**
+  - Direct transcription: Transcribe audio directly from a URL.
+  - Local transcription: Download the video locally before transcription.
+- **Google Drive Support:** Automatically converts Google Drive sharing links into direct download links.
+- **Word-Level Timestamps:** Provides detailed transcription results with timestamps for each word.
+- **Health Check Endpoint:** A `/health` endpoint for monitoring the API’s availability.
+- **Error Handling:** Handles invalid URLs, unsupported formats, and other issues gracefully.
 
-Prerequisites:
+---
 
-Python 3.10+
-A Deepgram API key (sign up at deepgram.com for an API key)
-Installation:
+## Getting Started
 
-Clone the repository: git clone https://github.com/your-username/transcription-api.git cd transcription-api
+Follow these steps to set up and run the project locally.
 
-Install dependencies: pip install -r requirements.txt
+### 1. Prerequisites
 
-Set up a folder for video downloads: mkdir videos
+Ensure you have the following installed:
+- Python 3.10 or later
+- `pip` (Python package manager)
+- A valid Deepgram API key (you can generate one by signing up at [Deepgram’s API portal](https://deepgram.com/)).
 
-Add your Deepgram API key: Replace the placeholder DEEPGRAM_API_KEY in app.py with your actual API key.
+---
 
-Usage
+### 2. Install Dependencies
 
-Run the API Locally:
+Clone the repository and install the required Python packages:
 
-Start the Flask app: python app.py
+```bash
+git clone <repository_url>
+cd <repository_folder>
+pip install -r requirements.txt
+```
 
-The app will run on: http://127.0.0.1:5000
+---
 
-Endpoints:
+### 3. Configure API Key
 
-/transcribe
-Method: POST
-Description: Transcribes video files from a URL.
-Request Body (JSON): { "video_url": "https://example.com/video.mp4", "direct_transcription": true }
-video_url (required): The URL of the video file (supports Google Drive links).
-direct_transcription (optional):
-true for direct transcription without downloading the video.
-false (default) to download the video locally before transcription.
-Response (Success): { "results": { "channels": [ { "alternatives": [ { "transcript": "Hello, this is a test transcription.", "timestamps": [ ["Hello", 0.0, 0.5], ["this", 0.5, 1.0], ["is", 1.0, 1.5], ["a", 1.5, 1.8], ["test", 1.8, 2.2], ["transcription", 2.2, 2.7] ] } ] } ] } }
-Error Response: { "error": "Video URL is required" }
-/health
-Method: GET
-Description: Health check endpoint for monitoring the app's availability.
-Response: { "status": "healthy" }
-Deployment
+The Deepgram API key is part of the code. Follow these steps to set up the Deepgram API key and include it in the project:
 
-Deploy on Render:
+#### Steps to Set Up the API Key:
+1. Visit the [Deepgram API portal](https://deepgram.com/) and sign up or log in.
+2. Navigate to the "API Keys" section in your account dashboard.
+3. Generate a new API key.
+4. Open the `app.py` file in the project directory.
+5. Replace the placeholder in this line with your API key:
+   ```python
+   DEEPGRAM_API_KEY = 'your_api_key_here'
+   ```
+6. Save the changes.
 
-Push the repository to GitHub.
+---
 
-Connect the repository to Render and create a new Web Service.
+### 4. Run the Application Locally
 
-Configure the build and start commands:
+Start the Flask application by running:
 
-Build Command: pip install -r requirements.txt
-Start Command: gunicorn app:app
-Use the public URL provided by Render for testing (e.g., https://your-app-name.onrender.com).
+```bash
+python app.py
+```
 
-Testing
+The application will run on `http://127.0.0.1:5000`. You can test the endpoints using tools like [Postman](https://www.postman.com/) or `curl`.
 
-Using Postman:
+---
 
-Create a new POST request to: https://your-app-name.onrender.com/transcribe
+## API Endpoints
 
-Set the request body to raw JSON: { "video_url": "https://example.com/video.mp4", "direct_transcription": true }
+### `POST /transcribe`
 
-Send the request and check the transcription result.
+#### Request:
+- Accepts a JSON payload with the following fields:
+  - `video_url`: (Required) URL of the video file (supports Google Drive links).
+  - `direct_transcription`: (Optional) Set to `true` for direct transcription without downloading the video; defaults to `false`.
 
-Health Check:
+#### Example (using `curl`):
+```bash
+curl -X POST -H "Content-Type: application/json" \
+    -d '{"video_url": "https://example.com/video.mp4", "direct_transcription": true}' \
+    http://127.0.0.1:5000/transcribe
+```
 
-Send a GET request to: https://your-app-name.onrender.com/health
-Verify that the app responds with {"status": "healthy"}.
-Folder Structure: transcription-api/
+#### Response:
+- A JSON object containing the transcription and word-level timestamps.
 
-app.py # Main application file
-requirements.txt # Python dependencies
-videos/ # Folder for storing downloaded videos
+Example Response:
+```json
+{
+  "results": {
+    "channels": [
+      {
+        "alternatives": [
+          {
+            "transcript": "Hello, this is a test transcription.",
+            "timestamps": [
+              ["Hello", 0.0, 0.5],
+              ["this", 0.5, 1.0],
+              ["is", 1.0, 1.5],
+              ["a", 1.5, 1.8],
+              ["test", 1.8, 2.2],
+              ["transcription", 2.2, 2.7]
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
+#### Error Response:
+```json
+{
+  "error": "Video URL is required"
+}
+```
 
+---
 
+### `GET /health`
 
+#### Request:
+- No parameters required.
 
+#### Response:
+```json
+{
+  "status": "healthy"
+}
+```
 
+---
 
-Future Improvements:
+## Deployment
 
-Add support for multiple languages in transcription.
-Implement asynchronous processing for large video files.
-Cache transcription results for repeated requests.
-Add authentication to secure the API.
-Contributing: Contributions are welcome! Please fork the repository and create a pull request for any changes or improvements.
+Deploy the project on Render or similar platforms by following these steps:
 
-License: This project is licensed under the MIT License. See the LICENSE file for more details.
+1. Create a private repository on GitHub.
+2. Link the GitHub repository to Render during the service setup.
+3. Provide the following commands during setup:
+   - **Build Command:**
+     ```bash
+     pip install -r requirements.txt
+     ```
+   - **Start Command:**
+     ```bash
+     gunicorn app:app --bind 0.0.0.0:$PORT
+     ```
+4. Render will provide a public URL for testing (e.g., `https://your-app-name.onrender.com`).
 
-ideo Transcription API
+---
 
-A Python-based Flask API for video transcription using the Deepgram API. This API supports transcribing video files from URLs, including Google Drive links, and provides transcription results in JSON format with word-level timestamps.
+## Tools and Technologies Used
+- **Flask**: Web framework for building the API.
+- **Deepgram API**: For video transcription.
+- **Render**: For deployment.
+- **Postman**: For testing the endpoints.
 
-Features:
+---
 
-Transcription Options:
-Direct Transcription: Transcribe audio directly from a URL.
-Local Transcription: Download the video to the server before transcription.
-Supports Google Drive Links: Converts Google Drive sharing links into direct download links automatically.
-Word-Level Timestamps: Provides detailed transcription results with timestamps for each word.
-Health Check Endpoint: A simple /health endpoint for monitoring the app's availability.
-Error Handling: Handles invalid URLs, unsupported formats, and other issues gracefully.
+## Future Improvements
+- Add support for multiple languages in transcription.
+- Implement asynchronous processing for large video files.
+- Cache transcription results for repeated requests.
+- Add authentication to secure the API.
+
+---
+
+## Contributing
+
+Contributions are welcome! Please fork the repository and create a pull request for any changes or improvements.
+
+---
+

@@ -90,7 +90,7 @@ def transcribe_video():
             transcription = transcribe({'buffer': video_file, 'mimetype': 'video/mp4'})
         
         # Line below removes video after transciprion, keep it as comment if you wish to keep transcribed video
-        # os.remove(video_path)
+        #os.remove(video_path)
 
         return jsonify(transcription), 200
 
