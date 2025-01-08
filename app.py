@@ -8,7 +8,7 @@ from deepgram import Deepgram
 app = Flask(__name__)
 
 # Configuration
-DEEPGRAM_API_KEY = 'YOUR_DEEPGRAM_API_KEY'  # Replace with your Deepgram API key
+DEEPGRAM_API_KEY = '3d4728611a2424222b04c90f9f6db374ebbad040'  # Replace with your Deepgram API key
 DOWNLOAD_FOLDER = './videos'  # Folder to store downloaded videos
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
