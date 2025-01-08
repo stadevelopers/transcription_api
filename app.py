@@ -27,23 +27,22 @@ def convert_to_downloadable_link(video_url):
         return f"https://drive.google.com/uc?id={file_id}&export=download"
     return video_url  # Return the original URL for non-Google Drive links
 
-def download_video(video_url):
+def convert_to_downloadable_link(video_url):
     """
-    Download video from the provided URL and return its local file path.
+    Convert video URL to a direct download link if it's a Google Drive or Dropbox link.
     """
-    video_url = convert_to_downloadable_link(video_url)
-    video_hash = hashlib.md5(video_url.encode()).hexdigest()  # Generate unique file name
-    video_path = os.path.join(DOWNLOAD_FOLDER, f"{video_hash}.mp4")
+    if "drive.google.com" in video_url:
+        if "/file/d/" in video_url:
+            file_id = video_url.split("/file/d/")[1].split("/")[0]
+            return f"https://drive.google.com/uc?id={file_id}&export=download"
+        elif "id=" in video_url:
+            file_id = video_url.split("id=")[1].split("&")[0]
+            return f"https://drive.google.com/uc?id={file_id}&export=download"
     
-    response = requests.get(video_url, stream=True)
-    if response.status_code != 200:
-        raise Exception(f"Failed to download video. Status code: {response.status_code}")
+    elif "dropbox.com" in video_url:
+        return video_url.replace("www.dropbox.com", "dl.dropboxusercontent.com").split('?')[0]
     
-    with open(video_path, 'wb') as video_file:
-        for chunk in response.iter_content(chunk_size=1024):
-            video_file.write(chunk)
-    
-    return video_path
+    return video_url  # Return original URL for other links
 
 def transcribe(source):
     """
