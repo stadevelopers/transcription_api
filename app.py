@@ -4,15 +4,15 @@ import os
 import hashlib
 from deepgram import Deepgram
 
-# Initialize Flask app
+# Initialization of Flask
 app = Flask(__name__)
 
 # Configuration
-DEEPGRAM_API_KEY = '3d4728611a2424222b04c90f9f6db374ebbad040'  # Replace with your Deepgram API key
+DEEPGRAM_API_KEY = '3d4728611a2424222b04c90f9f6db374ebbad040'  
 DOWNLOAD_FOLDER = './videos'  # Folder to store downloaded videos
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Initialize Deepgram client
+# Initialization of deepgram
 dg_client = Deepgram(DEEPGRAM_API_KEY)
 
 def get_direct_download_link(video_url):
@@ -79,17 +79,17 @@ def transcribe_video():
         if not video_url:
             return jsonify({'error': 'Video URL is required'}), 400
 
-        # Option 1: Direct transcription without downloading
+        # Option 1: Direct transcription without downloading the video, keep  "direct_transcription": true in postman to use
         if direct_transcription:
             transcription = transcribe({'url': get_direct_download_link(video_url)})
             return jsonify(transcription), 200
 
-        # Option 2: Download video and transcribe locally
+        # Option 2: Download video and transcribe locally, make "direct_transcription": false to use
         video_path = download_video(video_url)
         with open(video_path, 'rb') as video_file:
             transcription = transcribe({'buffer': video_file, 'mimetype': 'video/mp4'})
         
-        # Uncomment the following line to delete the video after transcription
+        # Line below removes video after transciprion, keep it as comment if you wish to keep transcribed video
         # os.remove(video_path)
 
         return jsonify(transcription), 200
