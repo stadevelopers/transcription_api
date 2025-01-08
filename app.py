@@ -8,24 +8,12 @@ from deepgram import Deepgram
 app = Flask(__name__)
 
 # Configuration
-DEEPGRAM_API_KEY = '3d4728611a2424222b04c90f9f6db374ebbad040'  # Replace with your Deepgram API key
+DEEPGRAM_API_KEY = 'YOUR_DEEPGRAM_API_KEY'  # Replace with your Deepgram API key
 DOWNLOAD_FOLDER = './videos'  # Folder to store downloaded videos
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 # Initialize Deepgram client
 dg_client = Deepgram(DEEPGRAM_API_KEY)
-
-def convert_to_downloadable_link(video_url):
-    """
-    Convert a video URL to a direct download link if applicable (e.g., for Google Drive links).
-    """
-    if "drive.google.com" in video_url and "/file/d/" in video_url:
-        file_id = video_url.split("/file/d/")[1].split("/")[0]
-        return f"https://drive.google.com/uc?id={file_id}&export=download"
-    elif "drive.google.com" in video_url and "id=" in video_url:
-        file_id = video_url.split("id=")[1].split("&")[0]
-        return f"https://drive.google.com/uc?id={file_id}&export=download"
-    return video_url  # Return the original URL for non-Google Drive links
 
 def convert_to_downloadable_link(video_url):
     """
@@ -38,11 +26,31 @@ def convert_to_downloadable_link(video_url):
         elif "id=" in video_url:
             file_id = video_url.split("id=")[1].split("&")[0]
             return f"https://drive.google.com/uc?id={file_id}&export=download"
-    
+
     elif "dropbox.com" in video_url:
         return video_url.replace("www.dropbox.com", "dl.dropboxusercontent.com").split('?')[0]
-    
+
     return video_url  # Return original URL for other links
+
+def download_video(video_url):
+    """
+    Download video from the provided URL and return its local file path.
+    """
+    # Ensure the link is a direct download link
+    video_url = convert_to_downloadable_link(video_url)
+    video_hash = hashlib.md5(video_url.encode()).hexdigest()  # Generate unique file name
+    video_path = os.path.join(DOWNLOAD_FOLDER, f"{video_hash}.mp4")
+    
+    # Download the video
+    response = requests.get(video_url, stream=True)
+    if response.status_code != 200:
+        raise Exception(f"Failed to download video. Status code: {response.status_code}")
+    
+    with open(video_path, 'wb') as video_file:
+        for chunk in response.iter_content(chunk_size=1024):
+            video_file.write(chunk)
+    
+    return video_path
 
 def transcribe(source):
     """
@@ -69,7 +77,7 @@ def transcribe_video():
 
         # Option 1: Direct transcription without downloading
         if direct_transcription:
-            transcription = transcribe({'url': video_url})
+            transcription = transcribe({'url': convert_to_downloadable_link(video_url)})
             return jsonify(transcription), 200
 
         # Option 2: Download video and transcribe locally
