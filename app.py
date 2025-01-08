@@ -15,50 +15,45 @@ os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 # Initialize Deepgram client
 dg_client = Deepgram(DEEPGRAM_API_KEY)
 
-def get_direct_download_link(video_url):
+def convert_to_downloadable_link(video_url):
     """
-    Convert Google Drive link to direct download link if applicable.
+    Convert a video URL to a direct download link if applicable (e.g., for Google Drive links).
     """
-    if "drive.google.com" in video_url:
-        try:
-            if "/file/d/" in video_url:
-                file_id = video_url.split("/file/d/")[1].split("/")[0]
-            elif "id=" in video_url:
-                file_id = video_url.split("id=")[1].split("&")[0]
-            else:
-                raise ValueError("Invalid Google Drive link format")
-            direct_link = f"https://drive.google.com/uc?id={file_id}&export=download"
-            return direct_link
-        except Exception as e:
-            raise ValueError(f"Error processing Google Drive link: {e}")
-    return video_url  # Return the original URL if not a Google Drive link
+    if "drive.google.com" in video_url and "/file/d/" in video_url:
+        file_id = video_url.split("/file/d/")[1].split("/")[0]
+        return f"https://drive.google.com/uc?id={file_id}&export=download"
+    elif "drive.google.com" in video_url and "id=" in video_url:
+        file_id = video_url.split("id=")[1].split("&")[0]
+        return f"https://drive.google.com/uc?id={file_id}&export=download"
+    return video_url  # Return the original URL for non-Google Drive links
 
 def download_video(video_url):
     """
     Download video from the provided URL and return its local file path.
     """
+    video_url = convert_to_downloadable_link(video_url)
     video_hash = hashlib.md5(video_url.encode()).hexdigest()  # Generate unique file name
     video_path = os.path.join(DOWNLOAD_FOLDER, f"{video_hash}.mp4")
+    
     response = requests.get(video_url, stream=True)
     if response.status_code != 200:
-        raise Exception("Failed to download video")
+        raise Exception(f"Failed to download video. Status code: {response.status_code}")
+    
     with open(video_path, 'wb') as video_file:
         for chunk in response.iter_content(chunk_size=1024):
             video_file.write(chunk)
+    
     return video_path
 
-def transcribe(source, mimetype=None):
+def transcribe(source):
     """
     Transcribe video/audio using Deepgram.
     """
-    try:
-        response = dg_client.transcription.sync_prerecorded(
-            source=source,
-            options={'punctuate': True, 'timestamps': True}
-        )
-        return response
-    except Exception as e:
-        raise Exception(f"Transcription failed: {str(e)}")
+    response = dg_client.transcription.sync_prerecorded(
+        source=source,
+        options={'punctuate': True, 'timestamps': True}
+    )
+    return response
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe_video():
@@ -66,16 +61,12 @@ def transcribe_video():
     Handle transcription requests.
     """
     try:
-        # Parse request JSON
         data = request.json
         video_url = data.get('video_url')
         direct_transcription = data.get('direct_transcription', False)
 
         if not video_url:
             return jsonify({'error': 'Video URL is required'}), 400
-
-        # Convert Google Drive link to direct download link if applicable
-        video_url = get_direct_download_link(video_url)
 
         # Option 1: Direct transcription without downloading
         if direct_transcription:
@@ -87,7 +78,7 @@ def transcribe_video():
         with open(video_path, 'rb') as video_file:
             transcription = transcribe({'buffer': video_file, 'mimetype': 'video/mp4'})
         
-        # Uncomment the following line if you want to delete the video after transcription
+        # Uncomment the following line to delete the video after transcription
         # os.remove(video_path)
 
         return jsonify(transcription), 200
