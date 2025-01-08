@@ -21,20 +21,21 @@ def get_direct_download_link(video_url):
     Supports Google Drive and Dropbox. Returns original URL for other links.
     """
     if "drive.google.com" in video_url:
-        # Extract the file ID from the Google Drive link
+        # Handle Google Drive links
         file_id = (
             video_url.split("/file/d/")[1].split("/")[0]
             if "/file/d/" in video_url
             else video_url.split("id=")[1].split("&")[0]
         )
-        # Return the downloadable link for Google Drive
         return f"https://drive.google.com/uc?id={file_id}&export=download"
-    
-    if "dropbox.com" in video_url:
+
+    elif "dropbox.com" in video_url:
         # Convert Dropbox shareable link to direct download link
-        return video_url.replace("www.dropbox.com", "dl.dropboxusercontent.com").split('?')[0]
+        if "?dl=0" in video_url or "?dl=1" in video_url:
+            return video_url.replace("www.dropbox.com", "dl.dropboxusercontent.com").split('?')[0]
+        return video_url.replace("www.dropbox.com", "dl.dropboxusercontent.com")
     
-    # Return original URL for non-Google Drive and non-Dropbox links
+    # Return original URL for other links
     return video_url
 
 def download_video(video_url):
