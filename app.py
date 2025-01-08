@@ -18,7 +18,7 @@ dg_client = Deepgram(DEEPGRAM_API_KEY)
 def get_direct_download_link(video_url):
     """
     Convert video links into direct download links if applicable.
-    Supports Google Drive and returns original URL for other links.
+    Supports Google Drive and Dropbox. Returns original URL for other links.
     """
     if "drive.google.com" in video_url:
         # Extract the file ID from the Google Drive link
@@ -30,7 +30,11 @@ def get_direct_download_link(video_url):
         # Return the downloadable link for Google Drive
         return f"https://drive.google.com/uc?id={file_id}&export=download"
     
-    # Return original URL for non-Google Drive links
+    if "dropbox.com" in video_url:
+        # Convert Dropbox shareable link to direct download link
+        return video_url.replace("www.dropbox.com", "dl.dropboxusercontent.com").split('?')[0]
+    
+    # Return original URL for non-Google Drive and non-Dropbox links
     return video_url
 
 def download_video(video_url):
